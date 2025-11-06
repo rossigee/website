@@ -9,7 +9,7 @@ The action that is taken upon receiving a notification from a Harbor project dep
 
 ### Supported Events
 
-You can define multiple webhook endpoints per project. Harbor supports two kinds of endpoints currently,  `HTTP`  and `SLACK`. Webhook notifications provide information about events in JSON format and are delivered by `HTTP` or `HTTPS POST` to an existing webhhook endpoint URL or Slack address that you provide. There are 2 JSON formats supported for the webhook payload, `Default` is the format that has always existed, and the data structure has not changed from the previous versions, except that it has been named, `CloudEvents` is the format which organizes the payload data as following the spec of [CloudEvents](https://cloudevents.io/). The following table describes the events that trigger notifications and the contents of each notification.
+You can define multiple webhook endpoints per project. Harbor supports multiple kinds of endpoints including `HTTP`, `SLACK`, and `EMAIL`. Webhook notifications provide information about events in JSON format and are delivered by `HTTP` or `HTTPS POST` to an existing webhhook endpoint URL or Slack address that you provide. There are 2 JSON formats supported for the webhook payload, `Default` is the format that has always existed, and the data structure has not changed from the previous versions, except that it has been named, `CloudEvents` is the format which organizes the payload data as following the spec of [CloudEvents](https://cloudevents.io/). The following table describes the events that trigger notifications and the contents of each notification.
 
 |Event|Webhook Event Type|Contents of Notification|
 |---|---|---|
@@ -801,11 +801,40 @@ event_data:
 }
 ```
 
+### Email Endpoint Payload Example
+
+For Email, Harbor sends an HTML-formatted message:
+
+```html
+<html>
+<body>
+<h2>Harbor Webhook Notification</h2>
+<p><strong>Event Type:</strong> PUSH_ARTIFACT</p>
+<p><strong>Operator:</strong> admin</p>
+<p><strong>Timestamp:</strong> 2023-04-03T06:04:46Z</p>
+<p><strong>Repository:</strong> harbor/alpine</p>
+<p><strong>Digest:</strong> sha256:954b378c375d852eb3c63ab88978f640b4348b01c1b3456a024a81536dafbbf4</p>
+</body>
+</html>
+```
+
 ### Webhook Endpoint Recommendations
 
-There are two kinds of endpoints.  For `HTTP` the endpoint that receives the webhook should ideally have a webhook listener that is capable of interpreting the payload and acting upon the information it contains. For example, running a shell script.
+There are multiple kinds of notification endpoints supported:  For `HTTP` the endpoint that receives the webhook should ideally have a webhook listener that is capable of interpreting the payload and acting upon the information it contains. For example, running a shell script.
+
+- **HTTP**: Generic webhook endpoint that receives JSON payloads
+- **SLACK**: Slack incoming webhook for rich message formatting
+- **EMAIL**: SMTP email notifications using Harbor's email configuration
+
+For `HTTP` endpoints, the receiving service should have a webhook listener capable of interpreting JSON payloads.
 
 And for Slack endpoint, you should follow the [guide of Slack incoming webhook](https://api.slack.com/messaging/webhooks).
+
+### Email Endpoint Configuration
+
+For Email endpoints, Harbor uses the configured SMTP settings in `harbor.yml`. The endpoint address should be the recipient email address (or comma-separated list).
+
+When you select the Email notify type, Harbor will send formatted HTML emails with event details.
 
 ### Example Use Cases
 
@@ -828,9 +857,9 @@ You can configure your continuous integration and development infrastructure so 
 
     ![Webhooks option](../../../img/webhook/navbar.png)
 
-1. Select notify type `HTTP`, so the webhook will be send to a HTTP endpoint.
+1. Select the notify type from the available options: `HTTP`, `SLACK`, or `EMAIL`.
 
-1. Select payload format as `Default` or `CloudEvents` when choose the `HTTP` notify type.
+1. For `HTTP` notify type, select payload format as `Default` or `CloudEvents`. Other notify types use their own formatting.
 
 1. Select events that you want to subscribe.
 
